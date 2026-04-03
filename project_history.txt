@@ -1,0 +1,69 @@
+    1  su -
+    2  ip link show
+    3  nmcli con show
+    4  nmcli con add type ethernet con-name mephi ifname enp0s8
+    5  nmcli con mod mephi ipv4.addresses 192.168.1.100/24
+    6  nmcli con mod mephi ipv4.gateway 192.168.1.1
+    7  nmcli con mod mephi ipv4.dns 8.8.8.8
+    8  nmcli con mod mephi ipv4.method manual
+    9  nmcli con up mephi
+    10  nmcli con show
+    11  hostnamectl set-hostname mephi-2026.domain.local
+    12  hostname
+    13  ip route show default
+    14  ip addr show enp0s8
+    15  ping -c 4 8.8.8.8 > /tmp/network_check.txt
+    16  ping -c 4 192.168.1.1 >> /tmp/network_check.txt
+    17  dnf install -y nginx tcpdump libcap-ng-utils
+    18  cd /tmp
+    19  dnf download tcpdump
+    20  ls -la tcpdump-*.rpm
+    21  rpm -ivh --force /tmp/tcpdump-*.rpm
+    22  rpm -qi tcpdump
+    23  cd
+    24  lsblk
+    25  fdisk /dev/sdb
+    26  mkfs.ext4 -L MEPHI_DATA /dev/sdb1
+    27  mkdir -p /data/mephi-web
+    28  echo 'LABEL=MEPHI_DATA /data/mephi-web ext4 defaults 0 2' >> /etc/fstab
+    29  mount -a
+    30  df -h /data/mephi-web
+    31  lsblk
+    32  systemctl start nginx
+    33  systemctl enable nginx
+    34  systemctl status nginx
+    35  journalctl -u nginx --since "5 min ago" --no-pager > /tmp/nginx_recent_logs.txt
+    36  groupadd mephi-devs
+    37  useradd mephi-admin
+    38  passwd mephi-admin
+    39  usermod -aG mephi-devs mephi-admin
+    40  chown -R mephi-admin:mephi-devs /data/mephi-web
+    41  chmod 2775 /data/mephi-web
+    42  id mephi-admin
+    43  getenforce
+    44  setenforce 1
+    45  semanage fcontext -a -t httpd_sys_content_t "/data/mephi-web(/.*)?"
+    46  restorecon -Rv /data/mephi-web
+    47  ls -Zd /data/mephi-web
+    48  chmod u-s /usr/sbin/tcpdump
+    49  setcap cap_net_raw,cap_net_admin+ep /usr/sbin/tcpdump
+    50  getcap /usr/sbin/tcpdump
+    51  sudo -u mephi-admin tcpdump --help
+    52  echo "root" > /etc/ssh/denied_users
+    53  sed -i "1i auth required pam_listfile.so item=user sense=deny file=/etc/ssh/denied_users onerr=succeed" /etc/pam.d/sshd
+    54  sed -i "1i auth required pam_listfile.so item=user sense=deny file=/etc/ssh/denied_users onerr=succeed" /etc/pam.d/login
+    55  systemctl restart sshd
+    56  su - mephi-admin
+    57  echo "Hello from Student: M255975" > /data/mephi-web/index.html
+    58  exit
+    59  restorecon /data/mephi-web/index.html
+    60  ls -la /data/mephi-web/index.html
+    61  chown mephi-admin:mephi-devs /data/mephi-web/index.html
+    62  nano /etc/nginx/conf.d/mephi.conf
+    63  nginx -t
+    64  systemctl reload nginx
+    65  firewall-cmd --add-service=http --permanent
+    66  firewall-cmd --reload
+    67  curl http://192.168.1.100
+    68  curl http://localhost
+    69  history > ~/project_history.txt
